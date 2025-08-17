@@ -3,85 +3,776 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pendaftaran dan Pelayanan Perawat</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Aplikasi Catatan Imunisasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hide { display: none !important; }
+        .table-container { max-height: 500px; overflow-y: auto; }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+    </style>
 </head>
-<body>
-    <h1>Pendaftaran Pasien</h1>
-    <form id="form-pendaftaran">
-        <label for="nama">Nama:</label>
-        <input type="text" id="nama" required>
-        
-        <label for="tanggal-lahir">Tanggal Lahir:</label>
-        <input type="date" id="tanggal-lahir" required>
-        
-        <label for="kelurahan">Kelurahan:</label>
-        <select id="kelurahan" required>
-            <option value="KARANGKLESEM">KARANGKLESEM</option>
-            <option value="TELUK">TELUK</option>
-            <option value="BERKOH">BERKOH</option>
-            <option value="PWT KIDUL">PWT KIDUL</option>
-            <option value="PWT KULON">PWT KULON</option>
-            <option value="TANJUNG">TANJUNG</option>
-            <option value="KARANGPUCUNG">KARANGPUCUNG</option>
-        </select>
-        
-        <label for="rt">RT:</label>
-        <input type="number" id="rt" required>
-        
-        <label for="rw">RW:</label>
-        <input type="number" id="rw" required>
-        
-        <label for="nomor-telepon">Nomor Telepon:</label>
-        <input type="text" id="nomor-telepon" required>
-        
-        <label for="nama-wali">Nama Wali:</label>
-        <input type="text" id="nama-wali" required>
-        
-        <button type="submit">Daftar</button>
-    </form>
-
-    <h2>Daftar Pasien</h2>
-    <ul id="daftar-pasien"></ul>
-
-    <h1>Pelayanan Perawat</h1>
-    <form id="form-pelayanan">
-        <label for="pasien">Pilih Pasien:</label>
-        <select id="pasien" required></select>
-        
-        <label for="deskripsi">Deskripsi Pelayanan:</label>
-        <textarea id="deskripsi" required></textarea>
-        
-        <label>Jenis Vaksin:</label>
-        <div>
-            <input type="checkbox" id="HB0" value="HB0"> HB0
-            <input type="checkbox" id="BCG" value="BCG"> BCG
-            <input type="checkbox" id="Pol1" value="Pol1"> Pol1
-            <input type="checkbox" id="DPT1" value="DPT1"> DPT1
-            <input type="checkbox" id="Pol2" value="Pol2"> Pol2
-            <input type="checkbox" id="DPT2" value="DPT2"> DPT2
-            <input type="checkbox" id="Pol3" value="Pol3"> Pol3
-            <input type="checkbox" id="DPT3" value="DPT3"> DPT3
-            <input type="checkbox" id="Pol4" value="Pol4"> Pol4
-            <input type="checkbox" id="IPV" value="IPV"> IPV
-            <input type="checkbox" id="IPV2" value="IPV2"> IPV2
-            <input type="checkbox" id="MR" value="MR"> MR
-            <input type="checkbox" id="PENTA" value="PENTA"> PENTA
-            <input type="checkbox" id="boster-MR" value="boster MR"> Boster MR
-            <input type="checkbox" id="boster-PCV1" value="boster PCV 1"> Boster PCV 1
-            <input type="checkbox" id="PCV2" value="PCV 2"> PCV 2
-            <input type="checkbox" id="PCV3" value="PCV 3"> PCV 3
-            <input type="checkbox" id="RV1" value="RV 1"> RV 1
-            <input type="checkbox" id="RV2" value="RV 2"> RV 2
-            <input type="checkbox" id="RV3" value="RV 3"> RV 3
+<body class="bg-gray-100">
+    <!-- Login Form -->
+    <div id="login-container" class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">LOGIN APLIKASI IMUNISASI</h2>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" name="username" required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
+                        Masuk
+                    </button>
+                </div>
+            </form>
+            <div id="login-error" class="text-red-500 text-sm mt-4 hidden"></div>
         </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" class="hide p-4">
+        <nav class="bg-blue-600 text-white p-4 rounded-lg mb-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold">Catatan Imunisasi</h1>  
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded">Logout</button>
+            </div>
+        </nav>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div class="bg-white p-4 rounded-lg shadow md:col-span-1">
+                <ul class="space-y-2">
+                    <li><button id="menu-imunisasi" class="w-full text-left px-3 py-2 rounded-lg bg-blue-100 text-blue-700">
+                        Data Imunisasi
+                    </button></li>
+                    <li><button id="menu-tambah" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100">
+                        Tambah Data
+                    </button></li>
+                    <li id="admin-menu"><button id="menu-pengguna" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100">
+                        Pengguna
+                    </button></li>
+                    <li><button id="menu-rekap" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100">
+                        Rekap Kelurahan
+                    </button></li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="bg-white p-6 rounded-lg shadow md:col-span-3">
+                <!-- Data Imunisasi -->
+                <div id="imunisasi-section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Data Imunisasi</h2>
+                        <div class="flex space-x-2">
+                            <input type="text" id="search-input" placeholder="Cari nama/NIK..." 
+                                class="px-3 py-1 border border-gray-300 rounded text-sm">
+                            <button id="export-btn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Anak</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK Anak</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Wali</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Imunisasi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="imunisasi-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Data akan dimuat di sini -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Form Tambah Data -->
+                <div id="form-section" class="hide">
+                    <h2 class="text-xl font-bold mb-6" id="form-title">Tambah Data Imunisasi</h2>
+                    <form id="imunisasi-form" class="space-y-4">
+                        <input type="hidden" id="imunisasi-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="nama_anak" class="block text-sm font-medium text-gray-700">Nama Anak *</label>
+                                <input type="text" id="nama_anak" name="nama_anak" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                            </div>
+                            <div>
+                                <label for="nik_anak" class="block text-sm font-medium text-gray-700">NIK Anak *</label>
+                                <input type="number" id="nik_anak" name="nik_anak" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm"
+                                    maxlength="16"
+                                    oninput="this.value=this.value.slice(0,16)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="nama_wali" class="block text-sm font-medium text-gray-700">Nama Wali *</label>
+                                <input type="text" id="nama_wali" name="nama_wali" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                            </div>
+                            <div>
+                                <label for="nik_wali" class="block text-sm font-medium text-gray-700">NIK Wali *</label>
+                                <input type="number" id="nik_wali" name="nik_wali" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm"
+                                    maxlength="16"
+                                    oninput="this.value=this.value.slice(0,16)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="no_whatsapp" class="block text-sm font-medium text-gray-700">No WhatsApp</label>
+                                <input type="number" id="no_whatsapp" name="no_whatsapp"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                            </div>
+                            <div>
+                                <label for="kelurahan" class="block text-sm font-medium text-gray-700">Kelurahan *</label>
+                                <select id="kelurahan" name="kelurahan" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                                    <option value="">Pilih Kelurahan</option>
+                                    <option value="Karangklesem">Karangklesem</option>
+                                    <option value="Teluk">Teluk</option>
+                                    <option value="Berkoh">Berkoh</option>
+                                    <option value="PWT Kidul">PWT Kidul</option>
+                                    <option value="PWT Kulon">PWT Kulon</option>
+                                    <option value="Tanjung">Tanjung</option>
+                                    <option value="Karangpucung">Karangpucung</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="rt_rw" class="block text-sm font-medium text-gray-700">RT/RW *</label>
+                                <input type="text" id="rt_rw" name="rt_rw" placeholder="001/002" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                            </div>
+                            <div>
+                                <label for="tgl_imunisasi" class="block text-sm font-medium text-gray-700">Tanggal Imunisasi *</label>
+                                <input type="date" id="tgl_imunisasi" name="tgl_imunisasi" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Vaksin</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                <div><label><input type="checkbox" name="vaksin" value="HB0" class="mr-2">HB0</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="BCG" class="mr-2">BCG</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="Pol1" class="mr-2">Pol1</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="DPT1" class="mr-2">DPT1</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="Pol2" class="mr-2">Pol2</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="DPT2" class="mr-2">DPT2</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="Pol3" class="mr-2">Pol3</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="DPT3" class="mr-2">DPT3</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="Pol4" class="mr-2">Pol4</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="IPV" class="mr-2">IPV</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="IPV2" class="mr-2">IPV2</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="MR" class="mr-2">MR</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="PENTA Boster" class="mr-2">PENTA Boster</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="MR Boster" class="mr-2">MR Boster</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="PCV 1" class="mr-2">PCV 1</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="PCV 2" class="mr-2">PCV 2</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="PCV 3" class="mr-2">PCV 3</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="RV 1" class="mr-2">RV 1</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="RV 2" class="mr-2">RV 2</label></div>
+                                <div><label><input type="checkbox" name="vaksin" value="RV 3" class="mr-2">RV 3</label></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" id="cancel-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded">
+                                Batal
+                            </button>
+                            <button type="submit" id="save-btn" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Manajemen Pengguna -->
+                <div id="pengguna-section" class="hide">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Kelola Pengguna</h2>
+                        <button id="tambah-pengguna" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                            Tambah Pengguna
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pengguna-body">
+                                <!-- Data akan dimuat di sini -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Form Tambah Pengguna -->
+                <div id="form-pengguna" class="hide">
+                    <h2 class="text-xl font-bold mb-6">Tambah Pengguna</h2>
+                    <form id="pengguna-form" class="space-y-4 max-w-md">
+                        <input type="hidden" id="pengguna-id">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700">Username *</label>
+                            <input type="text" id="username-pengguna" name="username" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">Password *</label>
+                            <input type="password" id="password-pengguna" name="password" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                        </div>
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" id="cancel-pengguna-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded">
+                                Batal
+                            </button>
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Rekap Kelurahan -->
+                <div id="rekap-section" class="hide">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Rekap per Kelurahan</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Dari Tanggal</label>
+                            <input type="date" id="rekap-tgl-awal" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Sampai Tanggal</label>
+                            <input type="date" id="rekap-tgl-akhir" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded shadow-sm">
+                        </div>
+                    </div>
+                    
+                    <button id="tampil-rekap" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-4">
+                        Tampilkan Rekap
+                    </button>
+                    
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Imunisasi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rekap-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Data rekap akan dimuat disini -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="detail-rekap" class="mt-6 hide">
+                        <h3 class="text-lg font-bold mb-4">Detail Rekap Imunisasi</h3>
+                        <div class="table-container">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Anak</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK Anak</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Imunisasi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Vaksin</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-rekap-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Data detail rekap -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inisialisasi data
+        function initStorage() {
+            if (!localStorage.getItem('imunisasiData')) {
+                localStorage.setItem('imunisasiData', JSON.stringify([]));
+            }
+            
+            if (!localStorage.getItem('userData')) {
+                localStorage.setItem('userData', JSON.stringify([
+                    { id: 1, username: 'warno', password: '130890', isAdmin: true }
+                ]));
+            }
+        }
         
-        <button type="submit">Catat Pelayanan</button>
-    </form>
+        initStorage();
+        let currentUser = null;
+        let nextId = JSON.parse(localStorage.getItem('imunisasiData')).reduce((max, item) => 
+            item.id > max ? item.id : max, 0) + 1;
 
-    <h2>Catatan Pelayanan</h2>
-    <ul id="catatan-pelayanan"></ul>
+        // Login Handler
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const users = JSON.parse(localStorage.getItem('userData'));
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-container').classList.add('hide');
+                document.getElementById('app-container').classList.remove('hide');
+                
+                if (user.isAdmin) {
+                    document.getElementById('admin-menu').classList.remove('hide');
+                }
+                
+                loadImunisasiData();
+            } else {
+                document.getElementById('login-error').textContent = 'Username atau password salah';
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        });
 
-    <script src="script.js"></script>
+        // Logout Handler
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            // Tidak perlu clear data saat logout
+            currentUser = null;
+            document.getElementById('app-container').classList.add('hide');
+            document.getElementById('login-container').classList.remove('hide');
+            document.getElementById('login-form').reset();
+            document.getElementById('login-error').classList.add('hidden');
+        });
+
+        // Menu Navigation
+        document.getElementById('menu-imunisasi').addEventListener('click', function() {
+            showSection('imunisasi-section');
+        });
+
+        document.getElementById('menu-tambah').addEventListener('click', function() {
+            document.getElementById('form-title').textContent = 'Tambah Data Imunisasi';
+            document.getElementById('imunisasi-form').reset();
+            document.getElementById('tgl_imunisasi').value = new Date().toISOString().split('T')[0];
+            document.getElementById('imunisasi-id').value = '';
+            showSection('form-section');
+        });
+
+        document.getElementById('menu-pengguna').addEventListener('click', function() {
+            loadPenggunaData();
+            showSection('pengguna-section');
+        });
+
+        document.getElementById('menu-rekap').addEventListener('click', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('rekap-tgl-awal').value = today;
+            document.getElementById('rekap-tgl-akhir').value = today;
+            showSection('rekap-section');
+        });
+
+        document.getElementById('tambah-pengguna').addEventListener('click', function() {
+            document.getElementById('pengguna-form').reset();
+            document.getElementById('pengguna-id').value = '';
+            document.getElementById('form-pengguna').classList.remove('hide');
+            document.getElementById('pengguna-section').classList.add('hide');
+        });
+
+        document.getElementById('cancel-pengguna-btn').addEventListener('click', function() {
+            document.getElementById('form-pengguna').classList.add('hide');
+            document.getElementById('pengguna-section').classList.remove('hide');
+        });
+
+        // Form Submit Handler
+        document.getElementById('imunisasi-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('imunisasi-id').value;
+            const vaksinCheckboxes = document.querySelectorAll('input[name="vaksin"]:checked');
+            const vaksin = Array.from(vaksinCheckboxes).map(cb => cb.value);
+            
+            const data = {
+                nama_anak: document.getElementById('nama_anak').value,
+                nik_anak: document.getElementById('nik_anak').value,
+                nama_wali: document.getElementById('nama_wali').value,
+                nik_wali: document.getElementById('nik_wali').value,
+                no_whatsapp: document.getElementById('no_whatsapp').value,
+                kelurahan: document.getElementById('kelurahan').value,
+                rt_rw: document.getElementById('rt_rw').value,
+                tgl_imunisasi: document.getElementById('tgl_imunisasi').value,
+                vaksin: vaksin,
+                createdAt: new Date().toISOString()
+            };
+
+            // Validasi NIK
+            if (data.nik_anak.length !== 16 || data.nik_wali.length !== 16) {
+                alert('NIK Anak dan Wali harus 16 digit');
+                return;
+            }
+
+            const imunisasiData = JSON.parse(localStorage.getItem('imunisasiData'));
+            
+            if (id) {
+                // Edit existing
+                const index = imunisasiData.findIndex(item => item.id == id);
+                if (index !== -1) {
+                    data.id = id;
+                    imunisasiData[index] = data;
+                }
+            } else {
+                // Add new
+                data.id = nextId++;
+                imunisasiData.push(data);
+            }
+            
+            localStorage.setItem('imunisasiData', JSON.stringify(imunisasiData));
+            loadImunisasiData();
+            showSection('imunisasi-section');
+        });
+
+        document.getElementById('pengguna-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('pengguna-id').value;
+            const username = document.getElementById('username-pengguna').value;
+            const password = document.getElementById('password-pengguna').value;
+            
+            const users = JSON.parse(localStorage.getItem('userData'));
+            
+            if (id) {
+                // Edit
+                const index = users.findIndex(u => u.id == id);
+                if (index !== -1) {
+                    users[index].username = username;
+                    users[index].password = password;
+                }
+            } else {
+                // Add new
+                const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+                users.push({
+                    id: newId,
+                    username,
+                    password,
+                    isAdmin: false
+                });
+            }
+            
+            localStorage.setItem('userData', JSON.stringify(users));
+            loadPenggunaData();
+            document.getElementById('form-pengguna').classList.add('hide');
+            document.getElementById('pengguna-section').classList.remove('hide');
+        });
+
+        // Rekap Handler
+        document.getElementById('tampil-rekap').addEventListener('click', function() {
+            const tglAwal = document.getElementById('rekap-tgl-awal').value;
+            const tglAkhir = document.getElementById('rekap-tgl-akhir').value;
+            
+            if (!tglAwal || !tglAkhir) {
+                alert('Harap isi tanggal mulai dan tanggal akhir');
+                return;
+            }
+            
+            const data = JSON.parse(localStorage.getItem('imunisasiData'));
+            
+            // Filter by date range
+            const filteredData = data.filter(item => {
+                const itemDate = new Date(item.tgl_imunisasi);
+                const startDate = new Date(tglAwal);
+                const endDate = new Date(tglAkhir);
+                return itemDate >= startDate && itemDate <= endDate;
+            });
+            
+            // Group by kelurahan
+            const rekap = {};
+            filteredData.forEach(item => {
+                if (!rekap[item.kelurahan]) {
+                    rekap[item.kelurahan] = [];
+                }
+                rekap[item.kelurahan].push(item);
+            });
+            
+            // Display rekap
+            const tbody = document.getElementById('rekap-body');
+            tbody.innerHTML = '';
+            
+            const kelurahans = Object.keys(rekap);
+            if (kelurahans.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Tidak ada data pada rentang waktu tersebut</td></tr>';
+                document.getElementById('detail-rekap').classList.add('hide');
+                return;
+            }
+            
+            kelurahans.forEach((kelurahan, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kelurahan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rekap[kelurahan].length}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="showDetailRekap('${kelurahan}')" class="text-blue-600 hover:text-blue-900">Lihat Detail</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('detail-rekap').classList.add('hide');
+        });
+
+        // Search Handler
+        document.getElementById('search-input').addEventListener('input', function() {
+            loadImunisasiData(this.value);
+        });
+
+        // Export Handler
+        document.getElementById('export-btn').addEventListener('click', function() {
+            const data = JSON.parse(localStorage.getItem('imunisasiData'));
+            
+            if (data.length === 0) {
+                alert('Tidak ada data untuk diekspor');
+                return;
+            }
+            
+            // Convert to CSV
+            const headers = ['Nama Anak', 'NIK Anak', 'Nama Wali', 'NIK Wali', 'No WhatsApp', 'Kelurahan', 'RT/RW', 'Tanggal Imunisasi', 'Jenis Vaksin'];
+            const rows = data.map(item => [
+                `"${item.nama_anak}"`,
+                `"${item.nik_anak}"`,
+                `"${item.nama_wali}"`,
+                `"${item.nik_wali}"`,
+                `"${item.no_whatsapp || ''}"`,
+                `"${item.kelurahan}"`,
+                `"${item.rt_rw}"`,
+                `"${item.tgl_imunisasi}"`,
+                `"${item.vaksin ? item.vaksin.join(', ') : ''}"`
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'data_imunisasi.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Helper Functions
+        function showSection(sectionId) {
+            document.getElementById('imunisasi-section').classList.add('hide');
+            document.getElementById('form-section').classList.add('hide');
+            document.getElementById('pengguna-section').classList.add('hide');
+            document.getElementById('form-pengguna').classList.add('hide');
+            document.getElementById('rekap-section').classList.add('hide');
+            document.getElementById(sectionId).classList.remove('hide');
+        }
+
+        function loadImunisasiData(searchTerm = '') {
+            const data = JSON.parse(localStorage.getItem('imunisasiData'));
+            const tbody = document.getElementById('imunisasi-body');
+            tbody.innerHTML = '';
+            
+            let filteredData = data;
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filteredData = data.filter(item => 
+                    item.nama_anak.toLowerCase().includes(term) || 
+                    item.nik_anak.toString().includes(term) ||
+                    item.nama_wali.toLowerCase().includes(term) ||
+                    item.nik_wali.toString().includes(term)
+                );
+            }
+            
+            if (filteredData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada data ditemukan</td>';
+                tbody.appendChild(row);
+                return;
+            }
+            
+            filteredData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.nama_anak}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.nik_anak}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.nama_wali}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTanggal(item.tgl_imunisasi)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.kelurahan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editImunisasi(${item.id})" class="text-green-600 hover:text-green-900 mr-3">Edit</button>
+                        <button onclick="deleteImunisasi(${item.id})" class="text-red-600 hover:text-red-900">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadPenggunaData() {
+            const users = JSON.parse(localStorage.getItem('userData'));
+            const tbody = document.getElementById('pengguna-body');
+            tbody.innerHTML = '';
+            
+            users.forEach((user, index) => {
+                if (user.username === 'warno') return; // Skip admin utama
+                
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.username}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editPengguna(${user.id})" class="text-green-600 hover:text-green-900 mr-3">Edit</button>
+                        <button onclick="deletePengguna(${user.id})" class="text-red-600 hover:text-red-900">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function formatTanggal(tanggal) {
+            const tgl = new Date(tanggal);
+            return tgl.toLocaleDateString('id-ID');
+        }
+
+        // Fungsi global untuk handle edit dan delete
+        window.editImunisasi = function(id) {
+            const data = JSON.parse(localStorage.getItem('imunisasiData'));
+            const item = data.find(d => d.id == id);
+            
+            document.getElementById('form-title').textContent = 'Edit Data Imunisasi';
+            document.getElementById('imunisasi-id').value = item.id;
+            document.getElementById('nama_anak').value = item.nama_anak;
+            document.getElementById('nik_anak').value = item.nik_anak;
+            document.getElementById('nama_wali').value = item.nama_wali;
+            document.getElementById('nik_wali').value = item.nik_wali;
+            document.getElementById('no_whatsapp').value = item.no_whatsapp || '';
+            document.getElementById('kelurahan').value = item.kelurahan;
+            document.getElementById('rt_rw').value = item.rt_rw;
+            document.getElementById('tgl_imunisasi').value = item.tgl_imunisasi.split('T')[0];
+            
+            // Uncheck all vaksin first
+            document.querySelectorAll('input[name="vaksin"]').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            // Check the vaksin that were selected before
+            if (item.vaksin && item.vaksin.length > 0) {
+                document.querySelectorAll('input[name="vaksin"]').forEach(cb => {
+                    if (item.vaksin.includes(cb.value)) {
+                        cb.checked = true;
+                    }
+                });
+            }
+            
+            showSection('form-section');
+        };
+
+        window.deleteImunisasi = function(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+            
+            const data = JSON.parse(localStorage.getItem('imunisasiData'));
+            const filteredData = data.filter(d => d.id != id);
+            localStorage.setItem('imunisasiData', JSON.stringify(filteredData));
+            loadImunisasiData();
+        };
+
+        window.editPengguna = function(id) {
+            const users = JSON.parse(localStorage.getItem('userData'));
+            const user = users.find(u => u.id == id);
+            
+            document.getElementById('pengguna-id').value = user.id;
+            document.getElementById('username-pengguna').value = user.username;
+            document.getElementById('password-pengguna').value = '';
+            
+            document.getElementById('form-pengguna').classList.remove('hide');
+            document.getElementById('pengguna-section').classList.add('hide');
+        };
+
+        window.deletePengguna = function(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) return;
+            
+            const users = JSON.parse(localStorage.getItem('userData'));
+            const filteredUsers = users.filter(u => u.id != id);
+            localStorage.setItem('userData', JSON.stringify(filteredUsers));
+            loadPenggunaData();
+        };
+
+        window.showDetailRekap = function(kelurahan) {
+            const tglAwal = document.getElementById('rekap-tgl-awal').value;
+            const tglAkhir = document.getElementById('rekap-tgl-akhir').value;
+            
+            const data = JSON.parse(localStorage.getItem('imunisasiData'));
+            const filteredData = data.filter(item => {
+                const itemDate = new Date(item.tgl_imunisasi);
+                const startDate = new Date(tglAwal);
+                const endDate = new Date(tglAkhir);
+                return item.kelurahan === kelurahan && 
+                       itemDate >= startDate && 
+                       itemDate <= endDate;
+            });
+            
+            const tbody = document.getElementById('detail-rekap-body');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.nama_anak}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.nik_anak}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTanggal(item.tgl_imunisasi)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.vaksin ? item.vaksin.join(', ') : '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('detail-rekap').classList.remove('hide');
+        };
+
+        // Initialize
+        document.getElementById('tgl_imunisasi').value = new Date().toISOString().split('T')[0];
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            showSection('imunisasi-section');
+        });
+    </script>
 </body>
 </html>
