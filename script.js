@@ -1,36 +1,64 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-}
+const formPendaftaran = document.getElementById('form-pendaftaran');
+const daftarPasien = document.getElementById('daftar-pasien');
+const formPelayanan = document.getElementById('form-pelayanan');
+const pasienSelect = document.getElementById('pasien');
+const catatanPelayanan = document.getElementById('catatan-pelayanan');
 
-h1, h2 {
-    color: #333;
-}
+let pasienList = [];
+let pelayananList = [];
 
-form {
-    margin-bottom: 20px;
-}
+// Menangani pendaftaran pasien
+formPendaftaran.addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const nama = document.getElementById('nama').value;
+    const tanggalLahir = document.getElementById('tanggal-lahir').value;
+    const kelurahan = document.getElementById('kelurahan').value;
+    const rt = document.getElementById('rt').value;
+    const rw = document.getElementById('rw').value;
+    const nomorTelepon = document.getElementById('nomor-telepon').value;
+    const namaWali = document.getElementById('nama-wali').value;
 
-label {
-    display: block;
-    margin: 10px 0 5px;
-}
+    const pasien = { nama, tanggalLahir, kelurahan, rt, rw, nomorTelepon, namaWali };
+    pasienList.push(pasien);
+    
+    // Menambahkan pasien ke daftar
+    const li = document.createElement('li');
+    li.textContent = `${nama} - ${tanggalLahir}`;
+    daftarPasien.appendChild(li);
+    
+    // Menambahkan pasien ke dropdown pelayanan
+    const option = document.createElement('option');
+    option.value = nama;
+    option.textContent = nama;
+    pasienSelect.appendChild(option);
+    
+    // Reset form
+    formPendaftaran.reset();
+});
 
-input, textarea, select {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-}
+// Menangani pencatatan pelayanan
+formPelayanan.addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const pasien = pasienSelect.value;
+    const deskripsi = document.getElementById('deskripsi').value;
 
-button {
-    padding: 10px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
+    // Mengumpulkan jenis vaksin yang dipilih
+    const jenisVaksin = [];
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+    checkboxes.forEach((checkbox) => {
+        jenisVaksin.push(checkbox.value);
+    });
 
-button:hover {
-    background-color: #45a049;
-}
-
+    const catatan = { pasien, deskripsi, jenisVaksin: jenisVaksin.join(', ') };
+    pelayananList.push(catatan);
+    
+    // Menambahkan catatan pelayanan ke daftar
+    const li = document.createElement('li');
+    li.textContent = `${pasien}: ${deskripsi} - Vaksin: ${catatan.jenisVaksin}`;
+    catatanPelayanan.appendChild(li);
+    
+    // Reset form
+    formPelayanan.reset();
+});
