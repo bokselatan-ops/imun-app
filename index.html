@@ -1,1 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pendaftaran dan Pelayanan Perawat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Pendaftaran Pasien</h1>
+    <form id="form-pendaftaran">
+        <label for="nama">Nama:</label>
+        <input type="text" id="nama" required>
+        
+        <label for="tanggal-lahir">Tanggal Lahir:</label>
+        <input type="date" id="tanggal-lahir" required>
+        
+        <label for="kelurahan">Kelurahan:</label>
+        <select id="kelurahan" required>
+            <option value="KARANGKLESEM">KARANGKLESEM</option>
+            <option value="TELUK">TELUK</option>
+            <option value="BERKOH">BERKOH</option>
+            <option value="PWT KIDUL">PWT KIDUL</option>
+            <option value="PWT KULON">PWT KULON</option>
+            <option value="TANJUNG">TANJUNG</option>
+            <option value="KARANGPUCUNG">KARANGPUCUNG</option>
+        </select>
+        
+        <label for="rt">RT:</label>
+        <input type="number" id="rt" required>
+        
+        <label for="rw">RW:</label>
+        <input type="number" id="rw" required>
+        
+        <label for="nomor-telepon">Nomor Telepon:</label>
+        <input type="text" id="nomor-telepon" required>
+        
+        <label for="nama-wali">Nama Wali:</label>
+        <input type="text" id="nama-wali" required>
+        
+        <button type="submit">Daftar</button>
+    </form>
+
+    <h2>Daftar Pasien</h2>
+    <ul id="daftar-pasien"></ul>
+
+    <h1>Pelayanan Perawat</h1>
+    <form id="form-pelayanan">
+        <label for="pasien">Pilih Pasien:</label>
+        <select id="pasien" required></select>
+        
+        <label for="deskripsi">Deskripsi Pelayanan:</label>
+        <textarea id="deskripsi" required></textarea>
+        
+        <label>Jenis Vaksin:</label>
+        <div>
+            <input type="checkbox" id="HB0" value="HB0"> HB0
+            <input type="checkbox" id="BCG" value="BCG"> BCG
+            <input type="checkbox" id="Pol1" value="Pol1"> Pol1
+            <input type="checkbox" id="DPT1" value="DPT1"> DPT1
+            <input type="checkbox" id="Pol2" value="Pol2"> Pol2
+            <input type="checkbox" id="DPT2" value="DPT2"> DPT2
+            <input type="checkbox" id="Pol3" value="Pol3"> Pol3
+            <input type="checkbox" id="DPT3" value="DPT3"> DPT3
+            <input type="checkbox" id="Pol4" value="Pol4"> Pol4
+            <input type="checkbox" id="IPV" value="IPV"> IPV
+            <input type="checkbox" id="IPV2" value="IPV2"> IPV2
+            <input type="checkbox" id="MR" value="MR"> MR
+            <input type="checkbox" id="PENTA" value="PENTA"> PENTA
+            <input type="checkbox" id="boster-MR" value="boster MR"> Boster MR
+            <input type="checkbox" id="boster-PCV1" value="boster PCV 1"> Boster PCV 1
+            <input type="checkbox" id="PCV2" value="PCV 2"> PCV 2
+            <input type="checkbox" id="PCV3" value="PCV 3"> PCV 3
+            <input type="checkbox" id="RV1" value="RV 1"> RV 1
+            <input type="checkbox" id="RV2" value="RV 2"> RV 2
+            <input type="checkbox" id="RV3" value="RV 3"> RV 3
+        </div>
+        
+        <button type="submit">Catat Pelayanan</button>
+    </form>
+
+    <h2>Catatan Pelayanan</h2>
+    <ul id="catatan-pelayanan"></ul>
+
+    <script src="script.js"></script>
+</body>
+</html>
 
