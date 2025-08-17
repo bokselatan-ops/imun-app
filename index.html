@@ -1,248 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <title>Catatan Imunisasi</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f9ff; }
-    h1 { text-align: center; color: #004080; }
-    .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select, button { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #004080; color: white; border: none; cursor: pointer; margin-top: 15px; }
-    button:hover { background: #0066cc; }
-    .row { display: flex; gap: 10px; }
-    .row > div { flex: 1; }
-    .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 5px; margin-top: 10px; }
-    .result, .rekap { margin-top: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; font-size: 14px; }
-    th { background: #e6f0ff; }
-    .menu { text-align: center; margin-bottom: 20px; }
-    .menu button { width: auto; margin: 5px; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: #0066cc; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 6px; margin-top: 4px; }
+    button { margin-top: 12px; padding: 8px 15px; background: #0066cc; color: #fff; border: none; cursor: pointer; }
+    button:hover { background: #004c99; }
+    .card { border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 5px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📋 Catatan Imunisasi</h1>
-    
-    <div class="menu">
-      <button onclick="showForm()">➕ Input Data</button>
-      <button onclick="showRekap()">📊 Rekap</button>
+  <h2>📋 Catatan Imunisasi</h2>
+
+  <div class="card">
+    <label>NIK Anak</label>
+    <input type="text" id="nikAnak" maxlength="16">
+
+    <label>Nama Anak</label>
+    <input type="text" id="namaAnak">
+
+    <label>NIK Wali</label>
+    <input type="text" id="nikWali" maxlength="16">
+
+    <label>Nama Wali</label>
+    <input type="text" id="namaWali">
+
+    <label>No. WhatsApp</label>
+    <input type="text" id="noWA">
+
+    <label>Kelurahan</label>
+    <select id="kelurahan">
+      <option value="">--Pilih--</option>
+      <option>Karangklesem</option>
+      <option>Teluk</option>
+      <option>Berkoh</option>
+      <option>Pwt Kidul</option>
+      <option>Pwt Kulon</option>
+      <option>Tanjung</option>
+      <option>Karangpucung</option>
+    </select>
+
+    <label>RT/RW</label>
+    <input type="text" id="rtrw">
+
+    <label>Jenis Vaksin</label>
+    <div>
+      <input type="checkbox" name="vaksin" value="HB0"> HB0
+      <input type="checkbox" name="vaksin" value="BCG"> BCG
+      <input type="checkbox" name="vaksin" value="Pol1"> Pol1
+      <input type="checkbox" name="vaksin" value="DPT1"> DPT1
+      <input type="checkbox" name="vaksin" value="MR"> MR
+      <input type="checkbox" name="vaksin" value="PENTA Boster"> PENTA Boster
+      <!-- bisa ditambah sesuai list Anda -->
     </div>
 
-    <!-- Form Input -->
-    <div id="formSection">
-      <label>NIK Anak</label>
-      <input type="text" id="nikAnak" maxlength="16">
-
-      <label>Nama Anak</label>
-      <input type="text" id="namaAnak">
-
-      <label>NIK Wali</label>
-      <input type="text" id="nikWali" maxlength="16">
-
-      <label>Nama Wali</label>
-      <input type="text" id="namaWali">
-
-      <label>No WhatsApp</label>
-      <input type="text" id="wa">
-
-      <div class="row">
-        <div>
-          <label>Kelurahan</label>
-          <select id="kelurahan">
-            <option value="">--Pilih Kelurahan--</option>
-            <option>KarangKlesem</option>
-            <option>Teluk</option>
-            <option>Berkoh</option>
-            <option>PWT Kidul</option>
-            <option>PWT Kulon</option>
-            <option>Tanjung</option>
-            <option>Karangpucung</option>
-          </select>
-        </div>
-        <div>
-          <label>RT</label>
-          <input type="text" id="rt">
-        </div>
-        <div>
-          <label>RW</label>
-          <input type="text" id="rw">
-        </div>
-      </div>
-
-      <label>Jenis Vaksin</label>
-      <div class="checkbox-grid" id="vaksinList"></div>
-
-      <button onclick="simpanData()">💾 Simpan Data</button>
-
-      <label>Cari NIK / Nama Anak</label>
-      <input type="text" id="cariInput" placeholder="Masukkan NIK / Nama">
-      <button onclick="cariData()">🔍 Cari</button>
-
-      <div class="result" id="hasil"></div>
-    </div>
-
-    <!-- Rekap -->
-    <div id="rekapSection" style="display:none;">
-      <h2>📊 Rekap Data</h2>
-      <label>Filter Kelurahan</label>
-      <select id="filterKelurahan" onchange="filterRekap()">
-        <option value="">Semua</option>
-        <option>KarangKlesem</option>
-        <option>Teluk</option>
-        <option>Berkoh</option>
-        <option>PWT Kidul</option>
-        <option>PWT Kulon</option>
-        <option>Tanjung</option>
-        <option>Karangpucung</option>
-      </select>
-
-      <label>Rentang Tanggal</label>
-      <div class="row">
-        <input type="date" id="tglAwal">
-        <input type="date" id="tglAkhir">
-      </div>
-      <button onclick="filterRekap()">🔍 Tampilkan</button>
-      <button onclick="exportExcel()">⬇️ Export Excel</button>
-
-      <div class="rekap" id="rekap"></div>
-    </div>
+    <button onclick="simpanData()">💾 Simpan</button>
   </div>
 
-<script>
-const vaksinOptions = ["HB0","BCG","Pol1","DPT1","Pol2","DPT2","Pol3","DPT3","Pol4",
-"IPV","IPV2","MR","PENTA boster","MR boster","PCV 1","PCV 2","PCV 3","RV 1","RV 2","RV 3"];
+  <div class="card">
+    <h3>🔎 Cari Data</h3>
+    <input type="text" id="cariNIK" placeholder="Masukkan NIK atau Nama Anak">
+    <button onclick="cariData()">Cari</button>
+    <div id="hasilCari"></div>
+  </div>
 
-let cache = [];
+  <script>
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "XXXXXX",
+      appId: "YOUR_APP_ID"
+    };
 
-// Generate checkbox vaksin
-window.onload = () => {
-  const vDiv = document.getElementById("vaksinList");
-  vaksinOptions.forEach(v=>{
-    let label=document.createElement("label");
-    label.innerHTML=`<input type="checkbox" value="${v}"> ${v}`;
-    vDiv.appendChild(label);
-  });
-  loadData(); // load cache awal
-};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-function showForm(){
-  document.getElementById("formSection").style.display="block";
-  document.getElementById("rekapSection").style.display="none";
-}
+    function simpanData() {
+      const nikAnak = document.getElementById("nikAnak").value.trim();
+      const namaAnak = document.getElementById("namaAnak").value.trim();
+      const nikWali = document.getElementById("nikWali").value.trim();
+      const namaWali = document.getElementById("namaWali").value.trim();
+      const noWA = document.getElementById("noWA").value.trim();
+      const kelurahan = document.getElementById("kelurahan").value;
+      const rtrw = document.getElementById("rtrw").value.trim();
 
-function showRekap(){
-  document.getElementById("formSection").style.display="none";
-  document.getElementById("rekapSection").style.display="block";
-  filterRekap();
-}
+      // Ambil vaksin yg dicentang
+      const vaksinEls = document.querySelectorAll("input[name='vaksin']:checked");
+      let vaksinDipilih = [];
+      vaksinEls.forEach(v => vaksinDipilih.push(v.value));
 
-// Simpan data
-function simpanData(){
-  const data = ambilDataForm();
-  if(!data.nikAnak || !data.namaAnak){ alert("Lengkapi data!"); return; }
-  
-  data.tanggal = new Date().toLocaleString();
+      if (!nikAnak || nikAnak.length !== 16) {
+        alert("NIK Anak harus 16 digit");
+        return;
+      }
 
-  // simpan ke cache
-  cache.push([
-    data.tanggal,data.nikAnak,data.namaAnak,data.nikWali,data.namaWali,
-    data.wa,data.kelurahan,data.rt,data.rw,data.vaksin.join(";")
-  ]);
+      const data = {
+        nikAnak, namaAnak, nikWali, namaWali, noWA, kelurahan, rtrw,
+        vaksin: vaksinDipilih.join("; "),
+        tanggal: new Date().toISOString()
+      };
 
-  tampilHasil();
-  kosongkanForm();
-  alert("✅ Data berhasil disimpan!");
-}
+      db.ref("imunisasi/" + nikAnak).set(data, (error) => {
+        if (error) {
+          alert("❌ Gagal simpan data");
+        } else {
+          alert("✅ Data berhasil disimpan");
+          document.querySelectorAll("input, select").forEach(el => {
+            if (el.type === "checkbox") el.checked = false;
+            else el.value = "";
+          });
+        }
+      });
+    }
 
-// Ambil form
-function ambilDataForm(){
-  const vSelected = [...document.querySelectorAll("#vaksinList input:checked")].map(i=>i.value);
-  return {
-    nikAnak: document.getElementById("nikAnak").value.trim(),
-    namaAnak: document.getElementById("namaAnak").value.trim(),
-    nikWali: document.getElementById("nikWali").value.trim(),
-    namaWali: document.getElementById("namaWali").value.trim(),
-    wa: document.getElementById("wa").value.trim(),
-    kelurahan: document.getElementById("kelurahan").value,
-    rt: document.getElementById("rt").value,
-    rw: document.getElementById("rw").value,
-    vaksin: vSelected
-  };
-}
+    function cariData() {
+      const key = document.getElementById("cariNIK").value.trim().toLowerCase();
+      const hasilDiv = document.getElementById("hasilCari");
+      hasilDiv.innerHTML = "⏳ Mencari...";
 
-// Kosongkan form
-function kosongkanForm(){
-  document.querySelectorAll("input").forEach(i=>i.value="");
-  document.querySelectorAll("#vaksinList input").forEach(i=>i.checked=false);
-  document.getElementById("kelurahan").value="";
-}
-
-// Cari data
-function cariData(){
-  let key=document.getElementById("cariInput").value.trim().toLowerCase();
-  let found=cache.filter(r=>r[1].toLowerCase().includes(key)||r[2].toLowerCase().includes(key));
-  if(found.length===0){ 
-    document.getElementById("hasil").innerHTML="<p style='color:red'>❌ Data tidak ditemukan, silakan input baru.</p>";
-  } else {
-    tampilHasil(found);
-  }
-}
-
-// Tampil hasil
-function tampilHasil(data=cache){
-  let html="<table><tr><th>Tanggal</th><th>NIK Anak</th><th>Nama Anak</th><th>NIK Wali</th><th>Nama Wali</th><th>WA</th><th>Kelurahan</th><th>RT</th><th>RW</th><th>Vaksin</th></tr>";
-  data.forEach(r=>{
-    html+=`<tr>${r.map(c=>"<td>"+c+"</td>").join("")}</tr>`;
-  });
-  html+="</table>";
-  document.getElementById("hasil").innerHTML=html;
-}
-
-// Rekap
-function filterRekap(){
-  let fKel=document.getElementById("filterKelurahan").value;
-  let tAwal=document.getElementById("tglAwal").value;
-  let tAkhir=document.getElementById("tglAkhir").value;
-
-  let filtered=cache.filter(r=>{
-    let t=new Date(r[0]);
-    let ok=true;
-    if(fKel && r[6]!==fKel) ok=false;
-    if(tAwal && t < new Date(tAwal)) ok=false;
-    if(tAkhir && t > new Date(tAkhir+"T23:59:59")) ok=false;
-    return ok;
-  });
-
-  tampilRekap(filtered);
-}
-
-function tampilRekap(data){
-  if(data.length===0){ document.getElementById("rekap").innerHTML="<p>Tidak ada data</p>"; return; }
-  let html="<table><tr><th>Kelurahan</th><th>Jumlah</th></tr>";
-  let grup={};
-  data.forEach(r=>{ grup[r[6]]=(grup[r[6]]||0)+1; });
-  for(let k in grup){ html+=`<tr><td>${k}</td><td>${grup[k]}</td></tr>`; }
-  html+="</table>";
-  document.getElementById("rekap").innerHTML=html;
-}
-
-// Export Excel
-function exportExcel(){
-  if(cache.length===0){ alert("Data kosong!"); return; }
-  let csv="Tanggal,NIK Anak,Nama Anak,NIK Wali,Nama Wali,No WA,Kelurahan,RT,RW,Vaksin\n";
-  cache.forEach(r=>{ csv+=r.join(",")+"\n"; });
-  let blob=new Blob([csv],{type:"text/csv"});
-  let url=URL.createObjectURL(blob);
-  let a=document.createElement("a");
-  a.href=url; a.download="catatan_imunisasi.csv"; a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Load data (simulasi)
-function loadData(){ cache=[]; } 
-</script>
+      db.ref("imunisasi").once("value", (snapshot) => {
+        let found = false;
+        snapshot.forEach(child => {
+          const data = child.val();
+          if (data.nikAnak.toLowerCase() === key || data.namaAnak.toLowerCase().includes(key)) {
+            hasilDiv.innerHTML = `
+              <p><b>Nama Anak:</b> ${data.namaAnak}</p>
+              <p><b>NIK Anak:</b> ${data.nikAnak}</p>
+              <p><b>Nama Wali:</b> ${data.namaWali}</p>
+              <p><b>Kelurahan:</b> ${data.kelurahan}</p>
+              <p><b>Vaksin:</b> ${data.vaksin}</p>
+              <p><b>Tanggal:</b> ${data.tanggal}</p>
+            `;
+            found = true;
+          }
+        });
+        if (!found) {
+          hasilDiv.innerHTML = "⚠️ Data tidak ditemukan, silakan input baru.";
+        }
+      });
+    }
+  </script>
 </body>
 </html>
