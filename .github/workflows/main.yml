@@ -1,23 +1,27 @@
 name: Backup to MEGA
 
 on:
-  push:
-    branches:
-      - main   # jalan setiap ada perubahan di branch "main"
+  push:          # jalan setiap ada push
+  workflow_dispatch:  # bisa jalan manual juga
 
 jobs:
   backup:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Install MEGAcmd
-        run: sudo apt-get install -y megatools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y megacmd
 
       - name: Upload to MEGA
-        run: megacopy --reload --username "$MEGA_USER" --password "$MEGA_PASS" --local . --remote /imun-app
-
-    env:
-      MEGA_USER: ${{ secrets.MEGA_USER }}
-      MEGA_PASS: ${{ secrets.MEGA_PASS }}
+        run: |
+          mega-login "$MEGA_USER" "$MEGA_PASS"
+          mega-mkdir /imun-app || true
+          mega-put -r . /imun-app
+        env:
+          MEGA_USER: ${{ secrets.MEGA_USER }}
+          MEGA_PASS: ${{ secrets.MEGA_PASS }}
