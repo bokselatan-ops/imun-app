@@ -1,27 +1,43 @@
-name: Backup to MEGA
+name: backup
 
 on:
-  push:          # jalan setiap ada push
-  workflow_dispatch:  # bisa jalan manual juga
+  push:
+    branches:
+      - main   # jalan tiap ada push ke branch main
+  workflow_dispatch: # bisa dijalankan manual dari GitHub
 
 jobs:
   backup:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up job
+        run: echo "Mulai backup ke MEGA..."
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Install MEGAcmd
         run: |
           sudo apt-get update
-          sudo apt-get install -y megacmd
+          sudo apt-get install -y megatools
 
       - name: Upload to MEGA
-        run: |
-          mega-login "$MEGA_USER" "$MEGA_PASS"
-          mega-mkdir /imun-app || true
-          mega-put -r . /imun-app
         env:
           MEGA_USER: ${{ secrets.MEGA_USER }}
           MEGA_PASS: ${{ secrets.MEGA_PASS }}
+        run: |
+          for i in 1 2 3; do
+            megacopy \
+              --reload \
+              --username "$MEGA_USER" \
+              --password "$MEGA_PASS" \
+              --local . \
+              --remote /imun-app \
+              && break
+            echo "Upload gagal, coba lagi dalam 15 detik..."
+            sleep 15
+          done
+
+      - name: Complete job
+        run: echo "Backup selesai ✅"
