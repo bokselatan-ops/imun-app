@@ -1,138 +1,339 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistem Informasi Imunisasi - MEGA</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-.gradient-bg { background: linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Imunisasi</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
-<header class="gradient-bg text-white shadow-lg">
-  <div class="container mx-auto px-4 py-6 flex justify-between items-center">
-    <h1 class="text-2xl font-bold">Sistem Imunisasi - MEGA</h1>
-    <div class="space-x-2">
-      <button onclick="showLoginModal()" class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700">Login MEGA</button>
-      <button onclick="syncWithMega()" class="bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700">Sinkronisasi</button>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="gradient-bg text-white shadow-md py-4">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h1 class="text-xl font-bold">Sistem Informasi Imunisasi</h1>
+                    </div>
+                    <button onclick="toggleExportMenu()" class="bg-white text-blue-600 px-3 py-1 rounded-md text-sm hover:bg-gray-100">
+                        Ekspor Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Export Menu -->
+        <div id="export-menu" class="hidden bg-white shadow-md py-2">
+            <div class="container mx-auto px-4">
+                <div class="flex space-x-2">
+                    <button onclick="exportToExcel('patients')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Ekspor Pasien
+                    </button>
+                    <button onclick="exportToExcel('vaccinations')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Ekspor Imunisasi
+                    </button>
+                    <button onclick="exportToExcel('all')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Ekspor Semua
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Total Pasien</p>
+                            <h3 id="total-patients" class="text-2xl font-bold">0</h3>
+                        </div>
+                        <div class="p-2 bg-blue-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Imunisasi Bulan Ini</p>
+                            <h3 id="monthly-vaccinations" class="text-2xl font-bold">0</h3>
+                        </div>
+                        <div class="p-2 bg-green-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Vaksin Tersedia</p>
+                            <h3 id="available-vaccines" class="text-2xl font-bold">0</h3>
+                        </div>
+                        <div class="p-2 bg-purple-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Patients Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-3 bg-gray-50 border-b">
+                        <h3 class="font-medium text-gray-700">Data Pasien</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Nama</th>
+                                    <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Umur</th>
+                                    <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">JK</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patients-table" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">Memuat data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vaccinations Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-3 bg-gray-50 border-b">
+                        <h3 class="font-medium text-gray-700">Rekam Imunisasi</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Pasien</th>
+                                    <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Vaksin</th>
+                                    <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vaccinations-table" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">Memuat data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Notification -->
+        <div id="notification" class="fixed top-4 right-4 hidden">
+            <div class="px-4 py-2 rounded shadow-lg text-white bg-green-500"></div>
+        </div>
     </div>
-  </div>
-</header>
 
-<main class="container mx-auto px-4 py-8">
-  <section id="dashboard" class="mb-12">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
-    <div id="data-statistics" class="hidden"></div>
-    <div id="no-data" class="text-center py-12">
-      <p class="text-gray-500">Silakan login dan muat data terlebih dahulu</p>
-    </div>
-  </section>
-  <section id="pasien" class="mb-12">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Data Pasien</h2>
-    <div class="bg-white rounded-xl shadow-md p-6" id="patient-table-container">
-      <p class="text-gray-500">Data belum dimuat</p>
-    </div>
-  </section>
-  <section id="imunisasi" class="mb-12">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Rekam Imunisasi</h2>
-    <div class="bg-white rounded-xl shadow-md p-6" id="vaccination-table-container">
-      <p class="text-gray-500">Data belum dimuat</p>
-    </div>
-  </section>
-</main>
+    <script>
+        // Sample data
+        let patients = [
+            { id: 1, name: "Budi Santoso", dob: "2020-01-15", gender: "L", address: "Jl. Merdeka No. 10", phone: "08123456789" },
+            { id: 2, name: "Ani Lestari", dob: "2021-03-20", gender: "P", address: "Jl. Sudirman No. 5", phone: "08234567890" },
+            { id: 3, name: "Citra Dewi", dob: "2019-11-10", gender: "P", address: "Jl. Gatot Subroto No. 15", phone: "08345678901" }
+        ];
 
-<!-- Login Modal -->
-<div id="login-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md">
-    <h3 class="text-xl font-semibold mb-4">Login MEGA</h3>
-    <form id="mega-login-form" class="space-y-4">
-      <input type="email" id="mega-email" placeholder="Email" required class="w-full border p-2 rounded-md">
-      <input type="password" id="mega-password" placeholder="Password" required class="w-full border p-2 rounded-md">
-      <div class="flex justify-end space-x-3">
-        <button type="button" onclick="hideLoginModal()" class="px-4 py-2 border rounded-md bg-white hover:bg-gray-50">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Login</button>
-      </div>
-    </form>
-  </div>
-</div>
+        let vaccinations = [
+            { id: 1, patientId: 1, patientName: "Budi Santoso", vaccine: "BCG", date: "2023-05-10", dose: "1", notes: "Tidak ada efek samping" },
+            { id: 2, patientId: 2, patientName: "Ani Lestari", vaccine: "DPT-HB-Hib", date: "2023-06-15", dose: "1", notes: "Sedikit demam" },
+            { id: 3, patientId: 3, patientName: "Citra Dewi", vaccine: "Polio", date: "2023-04-05", dose: "2", notes: "Bayi rewel sebentar" }
+        ];
 
-<script>
-let patients=[], vaccinations=[], vaccines=[];
-let megaEmail='', megaPassword='';
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDashboard();
+            renderTables();
+        });
 
-function showLoginModal(){document.getElementById('login-modal').classList.remove('hidden');}
-function hideLoginModal(){document.getElementById('login-modal').classList.add('hidden');}
+        // Helper functions
+        function calculateAge(dob) {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age > 1 ? age + ' tahun' : age + ' tahun';
+        }
 
-// Login MEGA
-document.getElementById('mega-login-form').addEventListener('submit', async e=>{
-  e.preventDefault();
-  megaEmail = document.getElementById('mega-email').value;
-  megaPassword = document.getElementById('mega-password').value;
-  hideLoginModal();
-  await loadFromMega();
-});
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
 
-// Load data dari backend
-async function loadFromMega(){
-  try{
-    const res = await fetch('/mega/load',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:megaEmail,password:megaPassword})});
-    const data = await res.json();
-    if(data.error) throw new Error(data.error);
-    patients=data.pasien||[]; vaccinations=data.imunisasi||[]; vaccines=data.vaksin||[];
-    updateUI();
-    alert('Data berhasil dimuat dari MEGA');
-  }catch(err){alert('Gagal load data: '+err.message);}
-}
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.querySelector('div').textContent = message;
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+        }
 
-// Sinkronisasi data ke MEGA
-async function syncWithMega(){
-  try{
-    const res = await fetch('/mega/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:megaEmail,password:megaPassword,data:{pasien:patients,imunisasi:vaccinations,vaksin:vaccines}})});
-    const result = await res.json();
-    if(result.error) throw new Error(result.error);
-    alert(result.message);
-  }catch(err){alert('Gagal sinkronisasi: '+err.message);}
-}
+        function toggleExportMenu() {
+            document.getElementById('export-menu').classList.toggle('hidden');
+        }
 
-// UI update
-function updateUI(){
-  document.getElementById('no-data').classList.add('hidden');
-  document.getElementById('data-statistics').classList.remove('hidden');
-  const stats=document.getElementById('data-statistics');
-  stats.innerHTML=`<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-xl shadow-md p-6"><p class="text-gray-500">Total Pasien</p><h3 class="text-3xl font-bold">${patients.length}</h3></div>
-    <div class="bg-white rounded-xl shadow-md p-6"><p class="text-gray-500">Total Imunisasi</p><h3 class="text-3xl font-bold">${vaccinations.length}</h3></div>
-    <div class="bg-white rounded-xl shadow-md p-6"><p class="text-gray-500">Jenis Vaksin</p><h3 class="text-3xl font-bold">${vaccines.length}</h3></div>
-  </div>`;
-  renderPatientTable(); renderVaccinationTable();
-}
+        // Render functions
+        function renderDashboard() {
+            document.getElementById('total-patients').textContent = patients.length;
+            document.getElementById('monthly-vaccinations').textContent = getCurrentMonthVaccinations();
+            document.getElementById('available-vaccines').textContent = 5; // Static for demo
+        }
 
-function renderPatientTable(){
-  const c=document.getElementById('patient-table-container');
-  if(patients.length===0){c.innerHTML='<p class="text-gray-500">Tidak ada data pasien</p>'; return;}
-  let html='<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NIK</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Umur</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">';
-  patients.forEach(p=>{
-    const age=calculateAge(p.tgl_lahir);
-    html+=`<tr><td class="px-6 py-4">${p.nama}</td><td class="px-6 py-4">${p.nik}</td><td class="px-6 py-4">${age} tahun</td><td class="px-6 py-4">${p.alamat}</td></tr>`;
-  });
-  html+='</tbody></table>'; c.innerHTML=html;
-}
+        function getCurrentMonthVaccinations() {
+            const now = new Date();
+            return vaccinations.filter(v => {
+                const vDate = new Date(v.date);
+                return vDate.getMonth() === now.getMonth() && vDate.getFullYear() === now.getFullYear();
+            }).length;
+        }
 
-function renderVaccinationTable(){
-  const c=document.getElementById('vaccination-table-container');
-  if(vaccinations.length===0){c.innerHTML='<p class="text-gray-500">Tidak ada data imunisasi</p>'; return;}
-  let html='<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pasien</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vaksin</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosis</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">';
-  vaccinations.forEach(v=>{
-    const patient=patients.find(p=>p.id===v.pasien_id)||{};
-    const vaccine=vaccines.find(x=>x.id===v.vaksin_id)||{};
-    const date=new Date(v.tgl_imunisasi).toLocaleDateString('id-ID');
-    html+=`<tr><td class="px-6 py-4">${date}</td><td class="px-6 py-4">${patient.nama||'Unknown'}</td><td class="px-6 py-4">${vaccine.nama||'Unknown'}</td><td class="px-6 py-4">${v.dosis}</td></tr>`;
-  });
-  html+='</tbody></table>'; c.innerHTML=html;
-}
+        function renderTables() {
+            renderPatientsTable();
+            renderVaccinationsTable();
+        }
 
-function calculateAge(birthDate){const birth=new Date(birthDate);const today=new Date();let age=today.getFullYear()-birth.getFullYear();const m=today.getMonth()-birth.getMonth();if(m<0||(m===0&&today.getDate()<birth.getDate()))age--;return age;}
-</script>
+        function renderPatientsTable() {
+            const tbody = document.getElementById('patients-table');
+            tbody.innerHTML = '';
+
+            patients.forEach(patient => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2 text-sm">${patient.name}</td>
+                    <td class="px-4 py-2 text-sm">${calculateAge(patient.dob)}</td>
+                    <td class="px-4 py-2 text-sm">${patient.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderVaccinationsTable() {
+            const tbody = document.getElementById('vaccinations-table');
+            tbody.innerHTML = '';
+
+            vaccinations.forEach(vaccination => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2 text-sm">${vaccination.patientName}</td>
+                    <td class="px-4 py-2 text-sm">${vaccination.vaccine} (Dosis ${vaccination.dose})</td>
+                    <td class="px-4 py-2 text-sm">${formatDate(vaccination.date)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Export to Excel functions
+        function exportToExcel(type) {
+            try {
+                let dataToExport = [];
+                let fileName = '';
+
+                if (type === 'patients') {
+                    dataToExport = patients.map(p => ({
+                        'ID Pasien': p.id,
+                        'Nama Lengkap': p.name,
+                        'Tanggal Lahir': p.dob,
+                        'Umur': calculateAge(p.dob),
+                        'Jenis Kelamin': p.gender === 'L' ? 'Laki-laki' : 'Perempuan',
+                        'Alamat': p.address,
+                        'Nomor Telepon': p.phone
+                    }));
+                    fileName = `data-pasien-${new Date().toISOString().slice(0, 10)}.xlsx`;
+                } 
+                else if (type === 'vaccinations') {
+                    dataToExport = vaccinations.map(v => ({
+                        'ID Rekam': v.id,
+                        'ID Pasien': v.patientId,
+                        'Nama Pasien': v.patientName,
+                        'Jenis Vaksin': v.vaccine,
+                        'Dosis': v.dose,
+                        'Tanggal Imunisasi': v.date,
+                        'Tanggal Format': formatDate(v.date),
+                        'Catatan': v.notes
+                    }));
+                    fileName = `data-imunisasi-${new Date().toISOString().slice(0, 10)}.xlsx`;
+                }
+                else if (type === 'all') {
+                    const patientsSheet = patients.map(p => ({
+                        'ID Pasien': p.id,
+                        'Nama Lengkap': p.name,
+                        'Tanggal Lahir': p.dob,
+                        'Umur': calculateAge(p.dob),
+                        'Jenis Kelamin': p.gender === 'L' ? 'Laki-laki' : 'Perempuan',
+                        'Alamat': p.address,
+                        'Nomor Telepon': p.phone
+                    }));
+
+                    const vaccinationsSheet = vaccinations.map(v => ({
+                        'ID Rekam': v.id,
+                        'ID Pasien': v.patientId,
+                        'Nama Pasien': v.patientName,
+                        'Jenis Vaksin': v.vaccine,
+                        'Dosis': v.dose,
+                        'Tanggal Imunisasi': v.date,
+                        'Tanggal Format': formatDate(v.date),
+                        'Catatan': v.notes
+                    }));
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(patientsSheet), "Pasien");
+                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(vaccinationsSheet), "Imunisasi");
+                    XLSX.writeFile(workbook, `data-imunisasi-lengkap-${new Date().toISOString().slice(0, 10)}.xlsx`);
+                    
+                    showNotification('Data lengkap berhasil diekspor ke Excel');
+                    return;
+                }
+
+                // Create single-sheet workbook
+                const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+
+                // Export to file
+                XLSX.writeFile(workbook, fileName);
+                showNotification('Data berhasil diekspor ke Excel');
+
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                showNotification('Gagal mengekspor data: ' + error.message);
+            }
+        }
+    </script>
 </body>
 </html>
