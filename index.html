@@ -6,170 +6,133 @@
 <title>Sistem Informasi Imunisasi - MEGA</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    .gradient-bg {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
+.gradient-bg { background: linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);}
 </style>
 </head>
 <body class="bg-gray-50">
 <header class="gradient-bg text-white shadow-lg">
-    <div class="container mx-auto px-4 py-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Sistem Imunisasi - MEGA</h1>
-        <button onclick="loadFromMega()" class="bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700">Muat Data MEGA</button>
+  <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Sistem Imunisasi - MEGA</h1>
+    <div class="space-x-2">
+      <button onclick="showLoginModal()" class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700">Login MEGA</button>
+      <button onclick="syncWithMega()" class="bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700">Sinkronisasi</button>
     </div>
+  </div>
 </header>
 
 <main class="container mx-auto px-4 py-8">
-    <section id="dashboard" class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
-        <div id="data-statistics" class="hidden"></div>
-        <div id="no-data" class="text-center py-12">
-            <p class="text-gray-500">Silakan muat data terlebih dahulu</p>
-        </div>
-    </section>
-
-    <section id="pasien" class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Data Pasien</h2>
-        <div class="bg-white rounded-xl shadow-md p-6" id="patient-table-container">
-            <p class="text-gray-500">Data belum dimuat</p>
-        </div>
-    </section>
-
-    <section id="imunisasi" class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Rekam Imunisasi</h2>
-        <div class="bg-white rounded-xl shadow-md p-6" id="vaccination-table-container">
-            <p class="text-gray-500">Data belum dimuat</p>
-        </div>
-    </section>
+  <section id="dashboard" class="mb-12">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+    <div id="data-statistics" class="hidden"></div>
+    <div id="no-data" class="text-center py-12">
+      <p class="text-gray-500">Silakan login dan muat data terlebih dahulu</p>
+    </div>
+  </section>
+  <section id="pasien" class="mb-12">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Data Pasien</h2>
+    <div class="bg-white rounded-xl shadow-md p-6" id="patient-table-container">
+      <p class="text-gray-500">Data belum dimuat</p>
+    </div>
+  </section>
+  <section id="imunisasi" class="mb-12">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Rekam Imunisasi</h2>
+    <div class="bg-white rounded-xl shadow-md p-6" id="vaccination-table-container">
+      <p class="text-gray-500">Data belum dimuat</p>
+    </div>
+  </section>
 </main>
 
+<!-- Login Modal -->
+<div id="login-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <h3 class="text-xl font-semibold mb-4">Login MEGA</h3>
+    <form id="mega-login-form" class="space-y-4">
+      <input type="email" id="mega-email" placeholder="Email" required class="w-full border p-2 rounded-md">
+      <input type="password" id="mega-password" placeholder="Password" required class="w-full border p-2 rounded-md">
+      <div class="flex justify-end space-x-3">
+        <button type="button" onclick="hideLoginModal()" class="px-4 py-2 border rounded-md bg-white hover:bg-gray-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Login</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-const MEGA_FILE_URL = 'https://mega.nz/file/3CBzCbRZ#PDKttoa5XQ21IfdwVBp2SRxDiIoeKpkkkfxRU1y9ehU';
+let patients=[], vaccinations=[], vaccines=[];
+let megaEmail='', megaPassword='';
 
-let patients = [];
-let vaccinations = [];
-let vaccines = [];
+function showLoginModal(){document.getElementById('login-modal').classList.remove('hidden');}
+function hideLoginModal(){document.getElementById('login-modal').classList.add('hidden');}
 
-async function loadFromMega() {
-    try {
-        const response = await fetch(MEGA_FILE_URL);
-        const textData = await response.text();
+// Login MEGA
+document.getElementById('mega-login-form').addEventListener('submit', async e=>{
+  e.preventDefault();
+  megaEmail = document.getElementById('mega-email').value;
+  megaPassword = document.getElementById('mega-password').value;
+  hideLoginModal();
+  await loadFromMega();
+});
 
-        // MEGA public link biasanya perlu diubah dulu jadi blob atau JSON
-        // Jika file JSON, parse langsung
-        const data = JSON.parse(textData);
-
-        patients = data.pasien || [];
-        vaccinations = data.imunisasi || [];
-        vaccines = data.vaksin || [];
-
-        updateUI();
-        alert('Data berhasil dimuat dari MEGA');
-    } catch (err) {
-        console.error('Gagal load data:', err);
-        alert('Gagal memuat data dari MEGA');
-    }
+// Load data dari backend
+async function loadFromMega(){
+  try{
+    const res = await fetch('/mega/load',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:megaEmail,password:megaPassword})});
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    patients=data.pasien||[]; vaccinations=data.imunisasi||[]; vaccines=data.vaksin||[];
+    updateUI();
+    alert('Data berhasil dimuat dari MEGA');
+  }catch(err){alert('Gagal load data: '+err.message);}
 }
 
-function updateUI() {
-    document.getElementById('no-data').classList.add('hidden');
-    document.getElementById('data-statistics').classList.remove('hidden');
-
-    const statsContainer = document.getElementById('data-statistics');
-    statsContainer.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <p class="text-gray-500">Total Pasien</p>
-                <h3 class="text-3xl font-bold">${patients.length}</h3>
-            </div>
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <p class="text-gray-500">Total Imunisasi</p>
-                <h3 class="text-3xl font-bold">${vaccinations.length}</h3>
-            </div>
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <p class="text-gray-500">Jenis Vaksin</p>
-                <h3 class="text-3xl font-bold">${vaccines.length}</h3>
-            </div>
-        </div>
-    `;
-
-    renderPatientTable();
-    renderVaccinationTable();
+// Sinkronisasi data ke MEGA
+async function syncWithMega(){
+  try{
+    const res = await fetch('/mega/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:megaEmail,password:megaPassword,data:{pasien:patients,imunisasi:vaccinations,vaksin:vaccines}})});
+    const result = await res.json();
+    if(result.error) throw new Error(result.error);
+    alert(result.message);
+  }catch(err){alert('Gagal sinkronisasi: '+err.message);}
 }
 
-function renderPatientTable() {
-    const container = document.getElementById('patient-table-container');
-    if (patients.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Tidak ada data pasien</p>';
-        return;
-    }
-
-    let html = `<table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Umur</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
-            </tr>
-        </thead><tbody class="bg-white divide-y divide-gray-200">`;
-
-    patients.forEach(p => {
-        const age = calculateAge(p.tgl_lahir);
-        html += `<tr>
-            <td class="px-6 py-4">${p.nama}</td>
-            <td class="px-6 py-4">${p.nik}</td>
-            <td class="px-6 py-4">${age} tahun</td>
-            <td class="px-6 py-4">${p.alamat}</td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    container.innerHTML = html;
+// UI update
+function updateUI(){
+  document.getElementById('no-data').classList.add('hidden');
+  document.getElementById('data-statistics').classList.remove('hidden');
+  const stats=document.getElementById('data-statistics');
+  stats.innerHTML=`<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6"><p class="text-gray-500">Total Pasien</p><h3 class="text-3xl font-bold">${patients.length}</h3></div>
+    <div class="bg-white rounded-xl shadow-md p-6"><p class="text-gray-500">Total Imunisasi</p><h3 class="text-3xl font-bold">${vaccinations.length}</h3></div>
+    <div class="bg-white rounded-xl shadow-md p-6"><p class="text-gray-500">Jenis Vaksin</p><h3 class="text-3xl font-bold">${vaccines.length}</h3></div>
+  </div>`;
+  renderPatientTable(); renderVaccinationTable();
 }
 
-function renderVaccinationTable() {
-    const container = document.getElementById('vaccination-table-container');
-    if (vaccinations.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Tidak ada data imunisasi</p>';
-        return;
-    }
-
-    let html = `<table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pasien</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vaksin</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosis</th>
-            </tr>
-        </thead><tbody class="bg-white divide-y divide-gray-200">`;
-
-    vaccinations.forEach(v => {
-        const patient = patients.find(p => p.id === v.pasien_id) || {};
-        const vaccine = vaccines.find(x => x.id === v.vaksin_id) || {};
-        const date = new Date(v.tgl_imunisasi).toLocaleDateString('id-ID');
-
-        html += `<tr>
-            <td class="px-6 py-4">${date}</td>
-            <td class="px-6 py-4">${patient.nama || 'Unknown'}</td>
-            <td class="px-6 py-4">${vaccine.nama || 'Unknown'}</td>
-            <td class="px-6 py-4">${v.dosis}</td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    container.innerHTML = html;
+function renderPatientTable(){
+  const c=document.getElementById('patient-table-container');
+  if(patients.length===0){c.innerHTML='<p class="text-gray-500">Tidak ada data pasien</p>'; return;}
+  let html='<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NIK</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Umur</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+  patients.forEach(p=>{
+    const age=calculateAge(p.tgl_lahir);
+    html+=`<tr><td class="px-6 py-4">${p.nama}</td><td class="px-6 py-4">${p.nik}</td><td class="px-6 py-4">${age} tahun</td><td class="px-6 py-4">${p.alamat}</td></tr>`;
+  });
+  html+='</tbody></table>'; c.innerHTML=html;
 }
 
-function calculateAge(birthDate) {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
+function renderVaccinationTable(){
+  const c=document.getElementById('vaccination-table-container');
+  if(vaccinations.length===0){c.innerHTML='<p class="text-gray-500">Tidak ada data imunisasi</p>'; return;}
+  let html='<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pasien</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vaksin</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosis</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+  vaccinations.forEach(v=>{
+    const patient=patients.find(p=>p.id===v.pasien_id)||{};
+    const vaccine=vaccines.find(x=>x.id===v.vaksin_id)||{};
+    const date=new Date(v.tgl_imunisasi).toLocaleDateString('id-ID');
+    html+=`<tr><td class="px-6 py-4">${date}</td><td class="px-6 py-4">${patient.nama||'Unknown'}</td><td class="px-6 py-4">${vaccine.nama||'Unknown'}</td><td class="px-6 py-4">${v.dosis}</td></tr>`;
+  });
+  html+='</tbody></table>'; c.innerHTML=html;
 }
+
+function calculateAge(birthDate){const birth=new Date(birthDate);const today=new Date();let age=today.getFullYear()-birth.getFullYear();const m=today.getMonth()-birth.getMonth();if(m<0||(m===0&&today.getDate()<birth.getDate()))age--;return age;}
 </script>
 </body>
 </html>
