@@ -1,0 +1,23 @@
+name: Backup to MEGA
+
+on:
+  push:
+    branches:
+      - main   # jalan setiap ada perubahan di branch "main"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install MEGAcmd
+        run: sudo apt-get install -y megatools
+
+      - name: Upload to MEGA
+        run: megacopy --reload --username "$MEGA_USER" --password "$MEGA_PASS" --local . --remote /imun-app
+
+    env:
+      MEGA_USER: ${{ secrets.MEGA_USER }}
+      MEGA_PASS: ${{ secrets.MEGA_PASS }}
