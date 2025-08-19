@@ -3,521 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Imunisasi</title>
+    <title>Sistem Informasi Imunisasi - MEGA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- MEGA SDK untuk interaksi dengan MEGA Cloud -->
+    <script src="https://cdn.jsdelivr.net/npm/mega-sdk/dist/mega.min.js"></script>
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
-        .card-hover:hover {
-            transform: translateY(-3px);
-            transition: transform 0.2s ease;
-        }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="gradient-bg text-white shadow-md">
-            <div class="container mx-auto px-4 py-3">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h1 class="text-xl font-bold">Sistem Informasi Imunisasi</h1>
-                    </div>
-                    <div>
-                        <button onclick="toggleDataManagement()" class="bg-white text-blue-600 px-3 py-1 rounded text-sm hover:bg-gray-100">
-                            Kelola Data
-                        </button>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <img src="https://placehold.co/50x50" alt="Logo aplikasi imunisasi" class="h-12 w-12 rounded-full">
+                    <h1 class="text-2xl font-bold">Sistem Imunisasi - MEGA</h1>
+                </div>
+                <div>
+                    <button id="login-btn" onclick="showLoginModal()" class="bg-white text-blue-600 px-4 py-2 rounded-lg">
+                        Login MEGA
+                    </button>
+                    <div id="user-info" class="hidden items-center space-x-2">
+                        <span id="mega-email"></span>
+                        <button onclick="logout()" class="text-white hover:underline">Logout</button>
                     </div>
                 </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="container mx-auto px-4 py-6">
-            <!-- Data Management Panel (Hidden by default) -->
-            <div id="data-management" class="hidden bg-white rounded-lg shadow-md p-4 mb-6">
-                <div class="flex flex-wrap gap-3 justify-between items-center">
-                    <h2 class="text-lg font-semibold text-gray-800">Kelola Data</h2>
-                    <div class="flex gap-3">
-                        <button onclick="exportData()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
-                            Ekspor Data CSV
-                        </button>
-                        <button onclick="importData()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                            Impor Data CSV
-                        </button>
-                        <input type="file" id="file-input" class="hidden" accept=".csv">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-lg shadow-sm card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Pasien Terdaftar</p>
-                            <h3 id="total-patients" class="text-2xl font-bold">0</h3>
-                        </div>
-                        <div class="p-2 bg-blue-100 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-lg shadow-sm card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Imunisasi Bulan Ini</p>
-                            <h3 id="monthly-vaccinations" class="text-2xl font-bold">0</h3>
-                        </div>
-                        <div class="p-2 bg-green-100 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-lg shadow-sm card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Vaksin Tersedia</p>
-                            <h3 id="available-vaccines" class="text-2xl font-bold">0</h3>
-                        </div>
-                        <div class="p-2 bg-purple-100 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Patient and Vaccination Tables -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Patients Table -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="p-3 bg-gray-50 border-b">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-medium text-gray-700">Data Pasien</h3>
-                            <button onclick="showAddPatientForm()" class="text-blue-600 hover:text-blue-800 text-sm">
-                                + Tambah Pasien
-                            </button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Umur</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="patients-table" class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">Memuat data...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Vaccinations Table -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="p-3 bg-gray-50 border-b">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-medium text-gray-700">Rekam Imunisasi</h3>
-                            <button onclick="showAddVaccinationForm()" class="text-blue-600 hover:text-blue-800 text-sm">
-                                + Rekam Baru
-                            </button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pasien</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vaksin</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vaccinations-table" class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">Memuat data...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Patient Form Modal -->
-        <div id="patient-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-                <div class="p-4 border-b">
-                    <h3 class="text-lg font-medium">Formulir Pasien</h3>
-                </div>
-                <form id="patient-form" class="p-4 space-y-3">
-                    <input type="hidden" id="patient-id">
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                        <input type="text" id="name" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label for="dob" class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
-                            <input type="date" id="dob" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                        </div>
-                        <div>
-                            <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
-                            <select id="gender" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                <option value="L">Laki-laki</option>
-                                <option value="P">Perempuan</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-2 pt-2">
-                        <button type="button" onclick="hidePatientModal()" class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                            Simpan
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
+    </header>
 
-        <!-- Vaccination Form Modal -->
-        <div id="vaccination-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-                <div class="p-4 border-b">
-                    <h3 class="text-lg font-medium">Formulir Imunisasi</h3>
+    <main class="container mx-auto px-4 py-8">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <div class="space-x-3">
+                    <button onclick="syncWithMega()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        Sinkron ke MEGA
+                    </button>
+                    <button onclick="loadFromMega()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                        Muat dari MEGA
+                    </button>
                 </div>
-                <form id="vaccination-form" class="p-4 space-y-3">
-                    <input type="hidden" id="vaccination-id">
-                    <div>
-                        <label for="patient-select" class="block text-sm font-medium text-gray-700">Pasien</label>
-                        <select id="patient-select" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"></select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label for="vaccine-type" class="block text-sm font-medium text-gray-700">Jenis Vaksin</label>
-                            <select id="vaccine-type" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                <option value="BCG">BCG</option>
-                                <option value="DPT">DPT</option>
-                                <option value="Hepatitis B">Hepatitis B</option>
-                                <option value="Polio">Polio</option>
-                                <option value="Campak">Campak</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="vaccine-date" class="block text-sm font-medium text-gray-700">Tanggal</label>
-                            <input type="date" id="vaccine-date" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-2 pt-2">
-                        <button type="button" onclick="hideVaccinationModal()" class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                            Simpan
-                        </button>
-                    </div>
-                </form>
             </div>
+
+            <!-- Statistik akan ditampilkan di sini -->
+            <div id="data-statistics" class="hidden">
+                <!-- Konten statistik akan diisi oleh JavaScript -->
+            </div>
+
+            <div id="no-data" class="text-center py-12">
+                <p class="text-gray-500">Silakan login ke MEGA dan muat data terlebih dahulu</p>
+            </div>
+        </section>
+
+        <!-- Data Pasien Section -->
+        <section id="pasien" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Data Pasien</h2>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div id="patient-table-container">
+                    <p class="text-gray-500">Data belum dimuat</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rekam Imunisasi Section -->
+        <section id="imunisasi" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Rekam Imunisasi</h2>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div id="vaccination-table-container">
+                    <p class="text-gray-500">Data belum dimuat</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4">Login MEGA Cloud</h3>
+            <form id="mega-login-form" class="space-y-4">
+                <div>
+                    <label for="mega-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="mega-email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                </div>
+                <div>
+                    <label for="mega-password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="mega-password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideLoginModal()" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-blue-700">
+                        Login
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
+    <!-- Skrip untuk mengintegrasikan dengan MEGA -->
     <script>
-        // Sample data - in production this would come from a database
-        let patients = [
-            { id: 1, name: "Ananda Putri", dob: "2020-05-15", gender: "P" },
-            { id: 2, name: "Budi Santoso", dob: "2019-08-20", gender: "L" },
-            { id: 3, name: "Citra Lestari", dob: "2021-02-10", gender: "P" }
-        ];
-
-        let vaccinations = [
-            { id: 1, patientId: 1, vaccine: "BCG", date: "2023-01-10" },
-            { id: 2, patientId: 2, vaccine: "DPT", date: "2023-01-15" },
-            { id: 3, patientId: 3, vaccine: "Hepatitis B", date: "2023-02-05" }
-        ];
-
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            renderDashboard();
-            renderPatientsTable();
-            renderVaccinationsTable();
-            setupEventListeners();
+        // Konfigurasi untuk file di MEGA
+        const MEGA_FILE_URL = 'https://mega.nz/file/3CBzCbRZ#PDKttoa5XQ21IfdwVBp2SRxDiIoeKpkkkfxRU1y9ehU';
+        const MEGA_FILE_KEY = 'PDKttoa5XQ21IfdwVBp2SRxDiIoeKpkkkfxRU1y9ehU';
+        
+        // Variabel untuk data
+        let patients = [];
+        let vaccinations = [];
+        let vaccines = [];
+        
+        // Inisialisasi MEGA
+        const mega = new Mega();
+        
+        // Fungsi untuk menampilkan modal login
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+        
+        function hideLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+        
+        // Fungsi untuk logout
+        function logout() {
+            mega.logout();
+            document.getElementById('login-btn').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            resetUI();
+        }
+        
+        // Fungsi untuk reset UI
+        function resetUI() {
+            document.getElementById('data-statistics').classList.add('hidden');
+            document.getElementById('no-data').classList.remove('hidden');
+            document.getElementById('patient-table-container').innerHTML = '<p class="text-gray-500">Data belum dimuat</p>';
+            document.getElementById('vaccination-table-container').innerHTML = '<p class="text-gray-500">Data belum dimuat</p>';
+        }
+        
+        // Handle form login
+        document.getElementById('mega-login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('mega-email').value;
+            const password = document.getElementById('mega-password').value;
+            
+            try {
+                // Login ke MEGA
+                await mega.login(email, password);
+                
+                // Tampilkan info user
+                document.getElementById('mega-email').textContent = email;
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('user-info').classList.remove('hidden');
+                
+                // Sembunyikan modal login
+                hideLoginModal();
+                
+                // Muat data dari MEGA
+                await loadFromMega();
+                
+            } catch (error) {
+                alert('Login gagal: ' + error.message);
+            }
         });
-
-        // Helper functions
-        function calculateAge(dob) {
-            const birthDate = new Date(dob);
+        
+        // Fungsi untuk memuat data dari MEGA
+        async function loadFromMega() {
+            try {
+                console.log('Memulai proses load data dari MEGA...');
+                
+                // Download file dari MEGA
+                const fileData = await mega.downloadFromPublicLink(MEGA_FILE_URL, MEGA_FILE_KEY);
+                console.log('File berhasil didownload', fileData);
+                
+                // Parse data JSON
+                const data = JSON.parse(fileData);
+                
+                // Simpan data ke variabel
+                patients = data.pasien || [];
+                vaccinations = data.imunisasi || [];
+                vaccines = data.vaksin || [];
+                
+                console.log('Data berhasil di-load:', {patients, vaccinations, vaccines});
+                
+                // Update UI
+                updateUI();
+                
+                showAlert('success', 'Data berhasil dimuat dari MEGA');
+                
+            } catch (error) {
+                console.error('Error saat mengambil data dari MEGA:', error);
+                showAlert('error', 'Gagal memuat data dari MEGA: ' + error.message);
+            }
+        }
+        
+        // Fungsi untuk menyimpan data ke MEGA
+        async function syncWithMega() {
+            try {
+                console.log('Memulai proses sinkronisasi ke MEGA...');
+                
+                // Siapkan data untuk disimpan
+                const dataToSave = {
+                    pasien: patients,
+                    imunisasi: vaccinations,
+                    vaksin: vaccines,
+                    last_updated: new Date().toISOString()
+                };
+                
+                const jsonData = JSON.stringify(dataToSave, null, 2);
+                
+                // Upload file ke MEGA
+                console.log('Mulai upload ke MEGA...');
+                await mega.uploadToPublicLink(MEGA_FILE_URL, MEGA_FILE_KEY, jsonData, 'imunisasi_data.json');
+                
+                console.log('Data berhasil diupload ke MEGA');
+                showAlert('success', 'Data berhasil disinkronisasi ke MEGA');
+                
+            } catch (error) {
+                console.error('Error saat menyimpan data ke MEGA:', error);
+                showAlert('error', 'Gagal menyimpan data ke MEGA: ' + error.message);
+            }
+        }
+        
+        // Fungsi untuk menampilkan alert
+        function showAlert(type, message) {
+            // Implementasi alert sederhana
+            alert(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        // Fungsi untuk memperbarui UI setelah data dimuat
+        function updateUI() {
+            // Sembunyikan pesan "no data"
+            document.getElementById('no-data').classList.add('hidden');
+            
+            // Tampilkan statistik
+            document.getElementById('data-statistics').classList.remove('hidden');
+            updateStatistics();
+            
+            // Tampilkan tabel pasien
+            renderPatientTable();
+            
+            // Tampilkan tabel imunisasi
+            renderVaccinationTable();
+        }
+        
+        // Fungsi untuk memperbarui statistik
+        function updateStatistics() {
+            const statsContainer = document.getElementById('data-statistics');
+            
+            statsContainer.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Total Pasien</p>
+                                <h3 class="text-3xl font-bold">${patients.length}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Total Imunisasi</p>
+                                <h3 class="text-3xl font-bold">${vaccinations.length}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Jenis Vaksin</p>
+                                <h3 class="text-3xl font-bold">${vaccines.length}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Fungsi untuk menampilkan tabel pasien
+        function renderPatientTable() {
+            const container = document.getElementById('patient-table-container');
+            
+            if (patients.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Tidak ada data pasien</p>';
+                return;
+            }
+            
+            let html = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Umur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+            `;
+            
+            patients.forEach(patient => {
+                const age = calculateAge(patient.tgl_lahir);
+                
+                html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${patient.nama}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${patient.nik}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${age} tahun</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${patient.alamat}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Fungsi untuk menampilkan tabel imunisasi
+        function renderVaccinationTable() {
+            const container = document.getElementById('vaccination-table-container');
+            
+            if (vaccinations.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Tidak ada data imunisasi</p>';
+                return;
+            }
+            
+            let html = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pasien</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vaksin</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosis</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+            `;
+            
+            vaccinations.forEach(vaccination => {
+                const patient = patients.find(p => p.id === vaccination.pasien_id) || {};
+                const vaccine = vaccines.find(v => v.id === vaccination.vaksin_id) || {};
+                const date = new Date(vaccination.tgl_imunisasi).toLocaleDateString('id-ID');
+                
+                html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${date}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${patient.nama || 'Unknown'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${vaccine.nama || 'Unknown'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                ${vaccination.dosis}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Fungsi helper untuk menghitung umur
+        function calculateAge(birthDate) {
+            const birth = new Date(birthDate);
             const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
                 age--;
             }
-            return age !== 1 ? age + ' tahun' : age + ' tahun';
-        }
-
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        }
-
-        // Render functions
-        function renderDashboard() {
-            document.getElementById('total-patients').textContent = patients.length;
-            document.getElementById('monthly-vaccinations').textContent = getCurrentMonthVaccinations();
-            document.getElementById('available-vaccines').textContent = 5; // Hardcoded for demo
-        }
-
-        function getCurrentMonthVaccinations() {
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            return vaccinations.filter(v => {
-                const vDate = new Date(v.date);
-                return vDate.getMonth() === currentMonth && vDate.getFullYear() === currentYear;
-            }).length;
-        }
-
-        function renderPatientsTable() {
-            const tbody = document.getElementById('patients-table');
-            tbody.innerHTML = '';
-
-            patients.forEach(patient => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-4 py-2 text-sm">${patient.name}</td>
-                    <td class="px-4 py-2 text-sm">${calculateAge(patient.dob)}</td>
-                    <td class="px-4 py-2 text-sm space-x-1">
-                        <button onclick="editPatient(${patient.id})" class="text-blue-600 hover:text-blue-800">Edit</button>
-                        <button onclick="deletePatient(${patient.id})" class="text-red-600 hover:text-red-800">Hapus</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderVaccinationsTable() {
-            const tbody = document.getElementById('vaccinations-table');
-            tbody.innerHTML = '';
-
-            vaccinations.forEach(vaccination => {
-                const patient = patients.find(p => p.id === vaccination.patientId);
-                const patientName = patient ? patient.name : 'Unknown';
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-4 py-2 text-sm">${patientName}</td>
-                    <td class="px-4 py-2 text-sm">${vaccination.vaccine}</td>
-                    <td class="px-4 py-2 text-sm">${formatDate(vaccination.date)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Form handling
-        function showAddPatientForm() {
-            document.getElementById('patient-id').value = '';
-            document.getElementById('patient-form').reset();
-            document.getElementById('patient-modal').classList.remove('hidden');
-        }
-
-        function hidePatientModal() {
-            document.getElementById('patient-modal').classList.add('hidden');
-        }
-
-        function showAddVaccinationForm() {
-            const select = document.getElementById('patient-select');
-            select.innerHTML = patients.map(p => 
-                `<option value="${p.id}">${p.name} (${calculateAge(p.dob)})</option>`
-            ).join('');
             
-            document.getElementById('vaccination-id').value = '';
-            document.getElementById('vaccination-form').reset();
-            document.getElementById('vaccination-date').valueAsDate = new Date();
-            document.getElementById('vaccination-modal').classList.remove('hidden');
-        }
-
-        function hideVaccinationModal() {
-            document.getElementById('vaccination-modal').classList.add('hidden');
-        }
-
-        // CRUD operations
-        function editPatient(id) {
-            const patient = patients.find(p => p.id === id);
-            if (patient) {
-                document.getElementById('patient-id').value = patient.id;
-                document.getElementById('name').value = patient.name;
-                document.getElementById('dob').value = patient.dob;
-                document.getElementById('gender').value = patient.gender;
-                document.getElementById('patient-modal').classList.remove('hidden');
-            }
-        }
-
-        function deletePatient(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus pasien ini?')) {
-                patients = patients.filter(p => p.id !== id);
-                vaccinations = vaccinations.filter(v => v.patientId !== id);
-                renderDashboard();
-                renderPatientsTable();
-                renderVaccinationsTable();
-                showNotification('Pasien berhasil dihapus', 'success');
-            }
-        }
-
-        function deleteVaccination(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus rekam imunisasi ini?')) {
-                vaccinations = vaccinations.filter(v => v.id !== id);
-                renderDashboard();
-                renderVaccinationsTable();
-                showNotification('Rekam imunisasi berhasil dihapus', 'success');
-            }
-        }
-
-        // Event listeners
-        function setupEventListeners() {
-            // Patient form
-            document.getElementById('patient-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const id = document.getElementById('patient-id').value;
-                const patientData = {
-                    name: document.getElementById('name').value,
-                    dob: document.getElementById('dob').value,
-                    gender: document.getElementById('gender').value
-                };
-                
-                if (id) {
-                    // Update existing patient
-                    const index = patients.findIndex(p => p.id.toString() === id);
-                    if (index !== -1) {
-                        patients[index] = { ...patients[index], ...patientData };
-                        showNotification('Data pasien berhasil diperbarui', 'success');
-                    }
-                } else {
-                    // Add new patient
-                    const newId = patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1;
-                    patients.push({ id: newId, ...patientData });
-                    showNotification('Pasien baru berhasil ditambahkan', 'success');
-                }
-                
-                hidePatientModal();
-                renderDashboard();
-                renderPatientsTable();
-            });
-            
-            // Vaccination form
-            document.getElementById('vaccination-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const id = document.getElementById('vaccination-id').value;
-                const vaccinationData = {
-                    patientId: parseInt(document.getElementById('patient-select').value),
-                    vaccine: document.getElementById('vaccine-type').value,
-                    date: document.getElementById('vaccine-date').value
-                };
-                
-                if (id) {
-                    // Update existing vaccination
-                    const index = vaccinations.findIndex(v => v.id.toString() === id);
-                    if (index !== -1) {
-                        vaccinations[index] = { ...vaccinations[index], ...vaccinationData };
-                        showNotification('Rekam imunisasi berhasil diperbarui', 'success');
-                    }
-                } else {
-                    // Add new vaccination
-                    const newId = vaccinations.length > 0 ? Math.max(...vaccinations.map(v => v.id)) + 1 : 1;
-                    vaccinations.push({ id: newId, ...vaccinationData });
-                    showNotification('Rekam imunisasi baru berhasil ditambahkan', 'success');
-                }
-                
-                hideVaccinationModal();
-                renderDashboard();
-                renderVaccinationsTable();
-            });
-        }
-
-        // Data management
-        function toggleDataManagement() {
-            const panel = document.getElementById('data-management');
-            panel.classList.toggle('hidden');
-        }
-
-        function exportData() {
-            const data = {
-                patients,
-                vaccinations,
-                exportedAt: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `data-imunisasi-${new Date().toISOString().slice(0, 10)}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showNotification('Data berhasil diekspor', 'success');
-        }
-
-        function importData() {
-            document.getElementById('file-input').click();
-        }
-
-        document.getElementById('file-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.patients && data.vaccinations) {
-                        patients = data.patients;
-                        vaccinations = data.vaccinations;
-                        renderDashboard();
-                        renderPatientsTable();
-                        renderVaccinationsTable();
-                        showNotification('Data berhasil diimpor', 'success');
-                    } else {
-                        showNotification('Format file tidak valid', 'error');
-                    }
-                } catch (error) {
-                    showNotification('Gagal memproses file', 'error');
-                }
-            };
-            reader.readAsText(file);
-        });
-
-        // Notification
-        function showNotification(message, type) {
-            const notification = document.getElementById('notification');
-            const notificationContent = notification.querySelector('div');
-            
-            notificationContent.textContent = message;
-            notificationContent.className = `px-6 py-4 rounded shadow-lg max-w-sm ${
-                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`;
-            
-            notification.classList.remove('hidden');
-            setTimeout(() => notification.classList.add('hidden'), 3000);
+            return age;
         }
     </script>
 </body>
