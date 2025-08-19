@@ -1,51 +1,51 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const Mega = require('mega');
+const Mega = require('megajs'); // SDK resmi untuk server
+const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
-app.use(express.static('public')); // Serve frontend
+app.use(express.static('public'));
 
+const MEGA_EMAIL = process.env.MEGA_EMAIL;       // Simpan di env
+const MEGA_PASSWORD = process.env.MEGA_PASSWORD; // Simpan di env
 const MEGA_FILE_URL = 'https://mega.nz/file/3CBzCbRZ#PDKttoa5XQ21IfdwVBp2SRxDiIoeKpkkkfxRU1y9ehU';
 
-// Endpoint download data dari MEGA
-app.post('/mega/load', (req, res) => {
-    const { email, password } = req.body;
+// Load data dari MEGA
+app.get('/api/load', async (req, res) => {
+  try {
+    const storage = Mega({ email: MEGA_EMAIL, password: MEGA_PASSWORD });
+    const file = storage.file(MEGA_FILE_URL);
 
-    Mega({ email, password }, (err, storage) => {
-        if (err) return res.status(400).json({ error: err.message });
-
-        storage.download({ link: MEGA_FILE_URL }, (err, file) => {
-            if (err) return res.status(400).json({ error: err.message });
-
-            let data = '';
-            file.on('data', chunk => data += chunk.toString());
-            file.on('end', () => {
-                try {
-                    res.json(JSON.parse(data));
-                } catch (err) {
-                    res.status(500).json({ error: 'File MEGA bukan JSON valid' });
-                }
-            });
-        });
-    });
+    let data = '';
+    file.download()
+      .on('data', chunk => data += chunk.toString())
+      .on('end', () => {
+        res.json(JSON.parse(data));
+      })
+      .on('error', err => res.status(500).json({ error: err.message }));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Endpoint upload data ke MEGA
-app.post('/mega/save', (req, res) => {
-    const { email, password, data } = req.body;
+// Simpan data ke MEGA
+app.post('/api/save', async (req, res) => {
+  try {
+    const data = req.body; // JSON dari frontend
+    const storage = Mega({ email: MEGA_EMAIL, password: MEGA_PASSWORD });
+    const file = storage.file(MEGA_FILE_URL);
 
-    Mega({ email, password }, (err, storage) => {
-        if (err) return res.status(400).json({ error: err.message });
+    const buffer = Buffer.from(JSON.stringify(data, null, 2));
 
-        const buffer = Buffer.from(JSON.stringify(data, null, 2));
-
-        storage.upload({ link: MEGA_FILE_URL, name: 'imunisasi_data.json' }, buffer, (err) => {
-            if (err) return res.status(400).json({ error: err.message });
-            res.json({ message: 'Data berhasil diupload ke MEGA' });
-        });
+    file.upload(buffer, 'imunisasi_data.json', err => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'Data berhasil disimpan ke MEGA' });
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(port, () => console.log(`Server berjalan di port ${port}`));
